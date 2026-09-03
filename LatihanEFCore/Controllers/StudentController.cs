@@ -12,11 +12,11 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
 
     [ApiController]
     [Route("api/students")]
-    public sealed class LatihanEFCoreController : ControllerBase
+    public sealed class StudentController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
 
-    public LatihanEFCoreController(ApplicationDbContext db)
+    public StudentController(ApplicationDbContext db)
     {
         _db = db;
     }

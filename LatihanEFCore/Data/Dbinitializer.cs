@@ -24,9 +24,15 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
                 await _context.SaveChangesAsync();
             }
 
+            if (!_context.Classrooms.Any())
+            {
+                var classrooms = Seeders.ClassroomSeeder.GetClassrooms(5);
+                await _context.Classrooms.AddRangeAsync(classrooms);
+                await _context.SaveChangesAsync();
+            }
             if (!_context.Courses.Any())
             {
-                var courses = Seeders.CourseSeeder.GetCourses(_context.Teachers.ToList(), 10);
+                var courses = Seeders.CourseSeeder.GetCourses(teachers : _context.Teachers.ToList(), count: 10, classroom: _context.Classrooms.ToList());
                 await _context.Courses.AddRangeAsync(courses);
                 await _context.SaveChangesAsync();
             }
@@ -39,12 +45,6 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             }
 
 
-            if (!_context.Classrooms.Any())
-            {
-                var classrooms = Seeders.ClassroomSeeder.GetClassrooms(5);
-                await _context.Classrooms.AddRangeAsync(classrooms);
-                await _context.SaveChangesAsync();
-            }
         }
 
 

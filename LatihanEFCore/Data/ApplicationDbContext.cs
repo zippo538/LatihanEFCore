@@ -78,10 +78,23 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
 
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(150);
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Credits).IsRequired();
+                entity.Property(e => e.IdTeacher).IsRequired();
 
-                entity.HasOne(e => e.IdTeacher)
+                entity.Property(e => e.ClassroomId)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                // Relasi Course dengan Teacher
+                entity.HasOne(e => e.Teacher)
                     .WithMany()
-                    .HasForeignKey("TeacherId")
+                    .HasForeignKey(e => e.IdTeacher)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Relasi Course dengan Classroom
+                entity.HasOne(e => e.Classroom)
+                    .WithMany()
+                    .HasForeignKey(e => e.ClassroomId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }
@@ -166,10 +179,10 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             modelBuilder.Entity<PublicationTeacher>(entity =>
             {
                 entity.ToTable("PublicationTeachers");
-        entity.HasKey(e => e.IdPublicationTeacher);
+                entity.HasKey(e => e.IdPublicationTeacher);
 
-        entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
-        entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
             });
         }
     }
