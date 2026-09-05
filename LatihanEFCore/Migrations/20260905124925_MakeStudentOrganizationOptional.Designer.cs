@@ -12,8 +12,8 @@ using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data;
 namespace LatihanEFCore.DTO.Responses.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260903023926_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260905124925_MakeStudentOrganizationOptional")]
+    partial class MakeStudentOrganizationOptional
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,36 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("StudentActivityPoints", b =>
+                {
+                    b.Property<int>("IdStudent")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdActivityPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdStudent", "IdActivityPoints");
+
+                    b.HasIndex("IdActivityPoints");
+
+                    b.ToTable("StudentActivityPoints", (string)null);
+                });
+
+            modelBuilder.Entity("StudentCourses", b =>
+                {
+                    b.Property<int>("IdStudent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IdCourse")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("IdStudent", "IdCourse");
+
+                    b.HasIndex("IdCourse");
+
+                    b.ToTable("StudentCourses", (string)null);
+                });
 
             modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.ActivityPoints", b =>
                 {
@@ -41,9 +71,6 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
-                    b.Property<int>("IdStudent")
-                        .HasColumnType("int");
-
                     b.Property<int>("Points")
                         .HasColumnType("int");
 
@@ -54,19 +81,13 @@ namespace LatihanEFCore.DTO.Responses.Migrations
 
                     b.HasKey("IdActivityPoints");
 
-                    b.HasIndex("IdStudent")
-                        .IsUnique();
-
                     b.ToTable("ActivityPoints", (string)null);
                 });
 
             modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Classroom", b =>
                 {
-                    b.Property<int>("IdClassroom")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdClassroom"));
+                    b.Property<string>("IdClassroom")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
@@ -91,6 +112,14 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                     b.Property<string>("IdCourse")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("ClassroomId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("ClassroomIdClassroom")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<int>("Credits")
                         .HasColumnType("int");
 
@@ -102,7 +131,10 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                     b.Property<DateTime>("Hours")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("TeacherId")
+                    b.Property<int>("IdTeacher")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TeacherIdTeacher")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -112,7 +144,13 @@ namespace LatihanEFCore.DTO.Responses.Migrations
 
                     b.HasKey("IdCourse");
 
-                    b.HasIndex("TeacherId");
+                    b.HasIndex("ClassroomId");
+
+                    b.HasIndex("ClassroomIdClassroom");
+
+                    b.HasIndex("IdTeacher");
+
+                    b.HasIndex("TeacherIdTeacher");
 
                     b.ToTable("Courses", (string)null);
                 });
@@ -140,6 +178,9 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
 
+                    b.Property<int>("IdTeacher")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -150,18 +191,10 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
-                    b.Property<int>("StudentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
                     b.HasKey("IdOrganization");
 
-                    b.HasIndex("StudentId")
+                    b.HasIndex("IdTeacher")
                         .IsUnique();
-
-                    b.HasIndex("TeacherId");
 
                     b.ToTable("Organizations", (string)null);
                 });
@@ -222,17 +255,23 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                         .HasPrecision(3, 2)
                         .HasColumnType("decimal(3,2)");
 
+                    b.Property<int?>("IdOrganization")
+                        .IsRequired()
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<int?>("PhoneNumber")
+                    b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("int");
+                        .HasColumnType("varchar(20)");
 
                     b.HasKey("IdStudent");
+
+                    b.HasIndex("IdOrganization");
 
                     b.ToTable("Students", (string)null);
                 });
@@ -268,9 +307,12 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<int?>("PhoneNumber")
+                    b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("idCourse")
                         .HasColumnType("int");
 
                     b.HasKey("IdTeacher");
@@ -290,68 +332,97 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("CourseId")
-                        .HasColumnType("varchar(255)");
-
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("StudentId")
+                    b.Property<string>("IdCourse")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("IdStudent")
                         .HasColumnType("int");
 
                     b.HasKey("IdTuition");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("IdCourse");
 
-                    b.HasIndex("StudentId")
-                        .IsUnique();
+                    b.HasIndex("IdStudent");
 
                     b.ToTable("Tuitions", (string)null);
                 });
 
-            modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.ActivityPoints", b =>
+            modelBuilder.Entity("StudentActivityPoints", b =>
                 {
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.ActivityPoints", null)
+                        .WithMany()
+                        .HasForeignKey("IdActivityPoints")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student", null)
-                        .WithOne("IdActivityPoints")
-                        .HasForeignKey("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.ActivityPoints", "IdStudent")
+                        .WithMany()
+                        .HasForeignKey("IdStudent")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StudentCourses", b =>
+                {
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Course", null)
+                        .WithMany()
+                        .HasForeignKey("IdCourse")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student", null)
+                        .WithMany()
+                        .HasForeignKey("IdStudent")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
             modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Course", b =>
                 {
-                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Teacher", "IdTeacher")
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Classroom", "Classroom")
                         .WithMany()
-                        .HasForeignKey("TeacherId")
+                        .HasForeignKey("ClassroomId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("IdTeacher");
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Classroom", null)
+                        .WithMany("Courses")
+                        .HasForeignKey("ClassroomIdClassroom");
+
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("IdTeacher")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Teacher", null)
+                        .WithMany("Courses")
+                        .HasForeignKey("TeacherIdTeacher");
+
+                    b.Navigation("Classroom");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Organization", b =>
                 {
-                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student", "IdStudent")
-                        .WithOne("IdOrganization")
-                        .HasForeignKey("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Organization", "StudentId")
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Teacher", "Teacher")
+                        .WithOne("Organization")
+                        .HasForeignKey("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Organization", "IdTeacher")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Teacher", "IdTeacher")
-                        .WithMany()
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdStudent");
-
-                    b.Navigation("IdTeacher");
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.PublicationTeacher", b =>
                 {
                     b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Teacher", "IdTeacher")
-                        .WithMany()
+                        .WithMany("PublicationTeachers")
                         .HasForeignKey("TeacherId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -359,33 +430,58 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                     b.Navigation("IdTeacher");
                 });
 
-            modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Tuition", b =>
+            modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student", b =>
                 {
-                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Course", "IdCourse")
-                        .WithMany()
-                        .HasForeignKey("CourseId")
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Organization", "Organization")
+                        .WithMany("Students")
+                        .HasForeignKey("IdOrganization")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student", "IdStudent")
-                        .WithOne("IdTuition")
-                        .HasForeignKey("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Tuition", "StudentId")
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Tuition", b =>
+                {
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("IdCourse")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student", "Student")
+                        .WithMany("Tuitions")
+                        .HasForeignKey("IdStudent")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("IdCourse");
+                    b.Navigation("Course");
 
-                    b.Navigation("IdStudent");
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Classroom", b =>
+                {
+                    b.Navigation("Courses");
+                });
+
+            modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Organization", b =>
+                {
+                    b.Navigation("Students");
                 });
 
             modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student", b =>
                 {
-                    b.Navigation("IdActivityPoints")
+                    b.Navigation("Tuitions");
+                });
+
+            modelBuilder.Entity("home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Teacher", b =>
+                {
+                    b.Navigation("Courses");
+
+                    b.Navigation("Organization")
                         .IsRequired();
 
-                    b.Navigation("IdOrganization");
-
-                    b.Navigation("IdTuition")
-                        .IsRequired();
+                    b.Navigation("PublicationTeachers");
                 });
 #pragma warning restore 612, 618
         }

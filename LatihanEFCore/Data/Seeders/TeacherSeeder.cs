@@ -27,7 +27,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
                 .RuleFor(t => t.HireDate, f => f.Date.Past(10))
                 .RuleFor(t => t.Department, f => f.PickRandom(departments))
                 .RuleFor(t => t.Address, f => f.Address.FullAddress())
-                .RuleFor(t => t.PhoneNumber, f => f.Phone.PhoneNumber())
+                .RuleFor(t => t.PhoneNumber, f => f.Phone.PhoneNumber("08##########"))
                 // Generate 1 sampai 3 item PublicationTeacher untuk tiap Teacher
                 .RuleFor(t => t.PublicationTeachers, f => publicationFaker.Generate(f.Random.Number(1, 3)));
 

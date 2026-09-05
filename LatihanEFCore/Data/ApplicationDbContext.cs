@@ -39,12 +39,42 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             {
                 entity.ToTable("Students");
                 entity.HasKey(e => e.IdStudent);
-
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(150);
                 entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Address).IsRequired().HasMaxLength(250);
                 entity.Property(e => e.GPA).HasPrecision(3, 2);
+                entity.HasMany(e => e.Tuitions)
+                    .WithOne(e => e.Student)
+                    .HasForeignKey(e => e.IdStudent)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Organization)
+                    .WithMany(e => e.Students)
+                    .HasForeignKey(e => e.IdOrganization)
+                    .IsRequired(true)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(e => e.Courses)
+                .WithMany(e => e.Students)
+                .UsingEntity<Dictionary<string, object>>("StudentCourses", right => right
+                .HasOne<Course>()
+                .WithMany()
+                .HasForeignKey("IdCourse")
+                .OnDelete(DeleteBehavior.Restrict),
+                left => left
+                .HasOne<Student>()
+                .WithMany()
+                .HasForeignKey("IdStudent")
+                .OnDelete(DeleteBehavior.Cascade),
+                join =>
+                {
+                    join.ToTable("StudentCourses");
+                    join.HasKey(
+                        "IdStudent",
+                        "IdCourse"
+                        );
+                        });
+
+                ;
             });
         }
 
@@ -120,14 +150,14 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
 
                 entity.Property(e => e.Amount).HasPrecision(18, 2);
 
-                entity.HasOne(e => e.IdStudent)
-                    .WithOne(e => e.IdTuition)
-                    .HasForeignKey<Tuition>("StudentId")
+                entity.HasOne(e => e.Student)
+                    .WithMany(e => e.Tuitions)
+                    .HasForeignKey(e => e.IdStudent)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.IdCourse)
+                entity.HasOne(e => e.Course)
                     .WithMany()
-                    .HasForeignKey("CourseId")
+                    .HasForeignKey(e => e.IdCourse)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }
@@ -145,14 +175,15 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(150);
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
 
-                entity.HasOne(e => e.IdStudent)
-                    .WithOne(e => e.IdOrganization)
-                    .HasForeignKey<Organization>("StudentId")
+                entity.HasMany(e => e.Students)
+                    .WithOne(e => e.Organization)
+                    .HasForeignKey(e => e.IdOrganization)
+                    .IsRequired(true)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(e => e.IdTeacher)
-                    .WithMany()
-                    .HasForeignKey("TeacherId")
+                entity.HasOne(e => e.Teacher)
+                    .WithOne(e => e.Organization)
+                    .HasForeignKey<Organization>(e => e.IdTeacher)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }
@@ -167,12 +198,32 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(150);
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
 
-                entity.HasOne<Student>()
-                    .WithOne(e => e.IdActivityPoints)
-                    .HasForeignKey<ActivityPoints>(e => e.IdStudent)
-                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(e => e.Students)
+            .WithMany(e => e.ActivityPoints)
+            .UsingEntity<Dictionary<string, object>>(
+                "StudentActivityPoints",
+                right => right
+                    .HasOne<Student>()
+                    .WithMany()
+                    .HasForeignKey("IdStudent")
+                    .OnDelete(DeleteBehavior.Cascade),
+                left => left
+                    .HasOne<ActivityPoints>()
+                    .WithMany()
+                    .HasForeignKey("IdActivityPoints")
+                    .OnDelete(DeleteBehavior.Cascade),
+                join =>
+                {
+                    join.ToTable("StudentActivityPoints");
+
+                    join.HasKey(
+                        "IdStudent",
+                        "IdActivityPoints"
+                    );
+                });
             });
         }
+
 
         private static void ConfigurePublicationTeacher(ModelBuilder modelBuilder)
         {

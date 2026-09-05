@@ -17,6 +17,8 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models
         public required string Description { get; set; }
         public required int Credits { get; set; }
         public required DateTime Hours { get; set; }
+        public ICollection<Student> Students { get; set; }
+        = new List<Student>();
 
     }
 }

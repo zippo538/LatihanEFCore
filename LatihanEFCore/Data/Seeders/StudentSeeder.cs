@@ -8,18 +8,34 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
         public static List<Student> GetStudents(Teacher defaultTeacher, Course defaultCourse, int count = 10)
         {
             var studentId = 1;
-            List<string> nameOrganization = new List<string> { 
-                "Organization A", 
-                "Organization B", 
-                "Organization C",
-                "Organization D", 
-                "Organization E", 
-                "Organization F",
-                "Organization G", 
-                "Organization H", 
-                "Organization I", 
-                "Organization J"
-                };
+
+            // Satu Teacher hanya dimiliki oleh satu Organization.
+            // Seluruh Student yang dibuat oleh seeder ini berada pada organisasi yang sama.
+            var organization = new Organization
+            {
+                IdOrganization = 1,
+                Name = "Organization A",
+                Address = "Jl. Pendidikan No. 1",
+                PhoneNumber = "081234567890",
+                Email = "organization.a@example.com",
+                Description = "Organisasi utama untuk data awal.",
+                IdTeacher = defaultTeacher.IdTeacher,
+                Teacher = defaultTeacher
+            };
+
+            // Pool ActivityPoints dibuat satu kali agar satu point dapat digunakan
+            // oleh banyak Student (relasi many-to-many).
+            var activityPointId = 1;
+            var activityPointFaker = new Faker<ActivityPoints>("id_ID")
+                .RuleFor(a => a.IdActivityPoints, _ => activityPointId++)
+                .RuleFor(a => a.Title, f => f.Lorem.Sentence(3))
+                .RuleFor(a => a.Description, f => f.Lorem.Sentence())
+                .RuleFor(a => a.Date, f => f.Date.Recent(30))
+                .RuleFor(a => a.Points, f => f.Random.Number(10, 100));
+
+            var activityPoints = activityPointFaker.Generate(Math.Max(3, count / 2));
+
+            var tuitionId = 1;
 
             var faker = new Faker<Student>("id_ID") // Menggunakan lokal Indonesia
                 .RuleFor(s => s.IdStudent, f => studentId++)
@@ -28,50 +44,41 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
                 .RuleFor(s => s.EnrollmentDate, f => f.Date.Past(3)) // Tanggal acak 3 tahun lalu
                 .RuleFor(s => s.GPA, f => Math.Round(f.Random.Decimal(2.5m, 4.0m), 2))
                 .RuleFor(s => s.Address, f => f.Address.FullAddress())
-                .RuleFor(s => s.PhoneNumber, f => f.Phone.PhoneNumber())
-                .RuleFor(s => s.IdActivityPoints, f => new ActivityPoints
+                .RuleFor(s => s.PhoneNumber, f => f.Phone.PhoneNumber("08##########"))
+                .RuleFor(s => s.IdOrganization, _ => organization.IdOrganization)
+                .RuleFor(s => s.Organization, _ => organization)
+                .RuleFor(s => s.ActivityPoints, f => activityPoints
+                    .Where((_, index) => index == 0 || f.Random.Bool())
+                    .ToList())
+                .RuleFor(s => s.Tuitions, (f, student) => new List<Tuition>
                 {
-                    IdActivityPoints = f.IndexGlobal,
-                    IdStudent = studentId,
-                    Title = f.Lorem.Sentence(3),
-                    Description = f.Lorem.Paragraph(),
-                    Date = f.Date.Recent(30),
-                    Points = f.Random.Number(10, 100)
-                })
-                .RuleFor(s => s.IdTuition, f => new Tuition
-                {
-                    IdTuition = f.IndexGlobal,
-                    IdStudent = null!,
-                    IdCourse = defaultCourse,
-                    Date = f.Date.Recent(60),
-                    Amount = 5000000m
-                })
-                .RuleFor(s => s.IdOrganization, f => new Organization
-                {
-                    IdOrganization = f.IndexGlobal,
-                    Name = f.PickRandom(nameOrganization),
-                    Address = f.Address.StreetAddress(),
-                    PhoneNumber = f.Phone.PhoneNumber(),
-                    Email = f.Internet.Email(),
-                    Description = f.Lorem.Sentence(),
-                    IdTeacher = defaultTeacher,
-                    IdStudent = null!
+                    new Tuition
+                    {
+                        IdTuition = tuitionId++,
+                        IdStudent = student.IdStudent,
+                        Student = student,
+                        IdCourse = defaultCourse.IdCourse,
+                        Course = defaultCourse,
+                        Date = f.Date.Recent(60),
+                        Amount = 5_000_000m
+                    }
                 });
 
             var students = faker.Generate(count); // Membuat `count` jumlah data secara otomatis
 
-            // Menghubungkan relasi navigasi
+            // Lengkapi navigation property pada kedua sisi relasi.
+            organization.Students = students;
+
             foreach (var student in students)
             {
-                student.IdTuition.IdStudent = student;
-                if (student.IdOrganization != null)
+                foreach (var activityPoint in student.ActivityPoints)
                 {
-                    student.IdOrganization.IdStudent = student;
+                    activityPoint.Students.Add(student);
                 }
             }
 
             return students;
         }
-    }
+}
 }
 

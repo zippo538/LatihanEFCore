@@ -9,8 +9,14 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
 {
     public static class CourseSeeder
     {
-        public static IEnumerable<Course> GetCourses(List<Teacher> teachers, List<Classroom> classroom, int count = 10)
+        public static List<Course> GetCourses(List<Teacher> teachers, List<Classroom> classrooms, int count = 10)
         {
+            if (teachers.Count == 0)
+                throw new ArgumentException("Daftar teacher tidak boleh kosong.", nameof(teachers));
+
+            if (classrooms.Count == 0)
+                throw new ArgumentException("Daftar classroom tidak boleh kosong.", nameof(classrooms));
+
             var courseCodeIndex = 101;
 
             // Daftar pilihan nama mata kuliah
@@ -33,10 +39,10 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
                 .RuleFor(c => c.Title, f => f.PickRandom(courseTitles))
                 .RuleFor(c => c.Description, f => f.Lorem.Paragraph())
                 .RuleFor(c => c.Credits, f => f.Random.Number(2, 4)) // SKS berkisar 2-4
-                .RuleFor(c => c.IdTeacher, f => f.PickRandom(teachers).IdTeacher)
-                .RuleFor(course => course.Teacher, _ => null!)
-                .RuleFor( course => course.Classroom, _ => null!)
-                .RuleFor(c => c.ClassroomId, f => f.PickRandom(classroom).IdClassroom)
+                .RuleFor(c => c.Teacher, f => f.PickRandom(teachers))
+                .RuleFor(c => c.IdTeacher, (_, c) => c.Teacher.IdTeacher)
+                .RuleFor(c => c.Classroom, f => f.PickRandom(classrooms))
+                .RuleFor(c => c.ClassroomId, (_, c) => c.Classroom.IdClassroom)
                 .RuleFor(c => c.Hours, f => DateTime.Today.AddHours(f.Random.Number(7, 16))); // Jam perkuliahan
 
             return faker.Generate(count);

@@ -32,7 +32,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             }
             if (!_context.Courses.Any())
             {
-                var courses = Seeders.CourseSeeder.GetCourses(teachers : _context.Teachers.ToList(), count: 10, classroom: _context.Classrooms.ToList());
+                var courses = Seeders.CourseSeeder.GetCourses(teachers : _context.Teachers.ToList(), classrooms : _context.Classrooms.ToList(), count: 10);
                 await _context.Courses.AddRangeAsync(courses);
                 await _context.SaveChangesAsync();
             }

@@ -11,7 +11,6 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
     public sealed class ClassroomController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-
     public ClassroomController(ApplicationDbContext db) => _db = db;
 
      [HttpGet]
