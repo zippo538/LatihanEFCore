@@ -4,24 +4,24 @@ using Microsoft.EntityFrameworkCore;
 using LatihanEFCore.Services.Interfaces;
 using LatihanEFCore.DTO.Responses.DTOs;
 using LatihanEFCore.DTOs;
+using LatihanEFCore.Repository;
 
 namespace LatihanEFCore.DTO.Responses.Services
 {
     public class StudentService : IStudentService
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IStudentRepository _studentRepository;
         private readonly IMapper _mapper;
 
-        public StudentService(ApplicationDbContext db, IMapper mapper)
+        public StudentService(IStudentRepository studentRepository, IMapper mapper)
         {
-            _db = db;
+            _studentRepository = studentRepository;
             _mapper = mapper;
         }
 
         public async Task<ApiResponseDto<StudentDTO>> CreateStudent(CreateStudentDTO student)
         {
-            var emailAlreadyUsed = _db.Students
-                           .Any(item => item.Email == student.Email);
+            var emailAlreadyUsed = await _studentRepository.EmailExistsAsync(student.Email);
 
             if (emailAlreadyUsed)
             {
@@ -34,9 +34,10 @@ namespace LatihanEFCore.DTO.Responses.Services
             }
 
             var entity = _mapper.Map<home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models.Student>(student);
+            entity.EnrollmentDate = DateTime.UtcNow;
+            entity.GPA = 0;
 
-            _db.Students.Add(entity);
-            _db.SaveChanges();
+            await _studentRepository.AddAsync(entity);
 
             var response = _mapper.Map<StudentDTO>(entity);
 
@@ -44,19 +45,11 @@ namespace LatihanEFCore.DTO.Responses.Services
                 response,
                 "Data mahasiswa berhasil ditambahkan.");
         }
-
-        
-
-        public async Task<ApiResponseDto<List<StudentDTO>>> GetAllStudents()
+        public async Task<ApiResponseDto<List<StudentDTO>>>
+                    GetAllStudents()
         {
-            var students = _db.Students
-                            .AsNoTracking()
-                            .Include(item => item.Organization)
-                            .Include(item => item.ActivityPoints)
-                            .Include(item => item.Tuitions)
-                            .Include(item => item.Courses)
-                            .OrderBy(item => item.Name)
-                            .ToList();
+            var students =
+                await _studentRepository.GetAllWithRelationsAsync();
 
             var response = _mapper.Map<List<StudentDTO>>(students);
 
@@ -67,36 +60,30 @@ namespace LatihanEFCore.DTO.Responses.Services
 
         public async Task<ApiResponseDto<StudentDTO>> GetStudent(int id)
         {
-            var student = _db.Students
-                           .AsNoTracking()
-                           .Include(item => item.Organization)
-                           .Include(item => item.ActivityPoints)
-                           .Include(item => item.Tuitions)
-                           .Include(item => item.Courses)
-                           .FirstOrDefault(item => item.IdStudent == id);
+            var student =
+                await _studentRepository.GetWithRelationsAsync(id);
 
             if (student is null)
             {
                 return ApiResponseDto<StudentDTO>.ErrorResult(
                     $"Data mahasiswa dengan ID {id} tidak ditemukan.");
             }
-            
 
             var response = _mapper.Map<StudentDTO>(student);
-            response.Courses = _mapper.Map<List<CourseDTO>>(student.Courses);
 
             return ApiResponseDto<StudentDTO>.SuccessResult(
                 response,
                 "Data mahasiswa berhasil ditemukan.");
         }
 
-        public async Task<ApiResponseDto<StudentDTO>> UpdateStudent(int id, UpdateStudentDTO student)
+        public async Task<ApiResponseDto<StudentDTO>> UpdateStudent(
+            int id,
+            UpdateStudentDTO request)
         {
-            var entity = _db.Students
-                            .Include(item => item.ActivityPoints)
-                            .Include(item => item.Tuitions)
-                            .Include(item => item.Courses)
-                            .FirstOrDefault(item => item.IdStudent == id);
+            var entity =
+                await _studentRepository.GetWithRelationsAsync(
+                    id,
+                    asNoTracking: false);
 
             if (entity is null)
             {
@@ -104,8 +91,10 @@ namespace LatihanEFCore.DTO.Responses.Services
                     $"Data mahasiswa dengan ID {id} tidak ditemukan.");
             }
 
-            var emailAlreadyUsed = _db.Students.Any(item =>
-                item.IdStudent != id && item.Email == student.Email);
+            var emailAlreadyUsed =
+                await _studentRepository.EmailExistsAsync(
+                    request.Email,
+                    id);
 
             if (emailAlreadyUsed)
             {
@@ -113,12 +102,13 @@ namespace LatihanEFCore.DTO.Responses.Services
                     "Data mahasiswa gagal diubah.",
                     new List<string>
                     {
-                                    $"Email {student.Email} sudah digunakan mahasiswa lain."
+                        $"Email {request.Email} sudah digunakan mahasiswa lain."
                     });
             }
 
-            _mapper.Map(student, entity);
-            _db.SaveChanges();
+            _mapper.Map(request, entity);
+
+            await _studentRepository.UpdateAsync(entity);
 
             var response = _mapper.Map<StudentDTO>(entity);
 
@@ -126,9 +116,11 @@ namespace LatihanEFCore.DTO.Responses.Services
                 response,
                 "Data mahasiswa berhasil diubah.");
         }
+
         public async Task<ApiResponseDto<bool>> DeleteStudent(int id)
         {
-            var student = _db.Students.Find(id);
+            var student =
+                await _studentRepository.GetByIdAsync(id);
 
             if (student is null)
             {
@@ -136,13 +128,14 @@ namespace LatihanEFCore.DTO.Responses.Services
                     $"Data mahasiswa dengan ID {id} tidak ditemukan.");
             }
 
-            _db.Students.Remove(student);
-            _db.SaveChanges();
+            await _studentRepository.DeleteAsync(id);
 
             return ApiResponseDto<bool>.SuccessResult(
                 true,
-                "Data mahasiswa berhasil dihapus.")
-                ;
+                "Data mahasiswa berhasil dihapus.");
         }
+
+
+
     }
 }

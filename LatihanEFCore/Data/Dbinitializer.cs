@@ -1,5 +1,7 @@
 
 
+using Microsoft.EntityFrameworkCore;
+
 namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
 {
     public class Dbinitializer : IDbinitializer
@@ -14,7 +16,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
         public async Task Initialized()
         {
             // Pastikan database dibuat
-            await _context.Database.EnsureCreatedAsync();
+            await _context.Database.MigrateAsync();
 
             // Cek apakah data sudah ada, jika belum maka lakukan seeding
             if (!_context.Teachers.Any())

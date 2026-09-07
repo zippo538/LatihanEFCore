@@ -1,0 +1,29 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace LatihanEFCore.Repository
+{
+    public interface IRepository<TEntity, TKey> where TEntity : class
+    {
+        Task<IReadOnlyList<TEntity>> GetAllAsync(
+        CancellationToken ct = default);
+
+        Task<TEntity?> GetByIdAsync(
+            TKey id,
+            CancellationToken ct = default);
+
+        Task<TEntity> AddAsync(
+            TEntity entity,
+            CancellationToken ct = default);
+
+        Task<TEntity> UpdateAsync(
+            TEntity entity,
+            CancellationToken ct = default);
+
+        Task<bool> DeleteAsync(
+            TKey id,
+            CancellationToken ct = default);
+    }
+}

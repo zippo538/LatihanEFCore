@@ -1,0 +1,7 @@
+email: admin@example.com
+password: Admin123!
+role: Admin
+
+email: user@example.com,
+password: "User123!",
+role: "User"

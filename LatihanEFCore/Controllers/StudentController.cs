@@ -3,6 +3,8 @@ using LatihanEFCore.DTOs;
 using LatihanEFCore.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using FluentValidation;
+using LatihanEFCore.DTO.Responses;
 
 namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
 {
@@ -13,10 +15,18 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
     public class StudentController : ControllerBase
     {
         private readonly IStudentService _studentService;
+        private readonly IValidator<CreateStudentDTO> _createValidator;
+        private readonly IValidator<UpdateStudentDTO> _updateValidator;
 
-        public StudentController(IStudentService studentService)
+        public StudentController(
+            IStudentService studentService,
+            IValidator<CreateStudentDTO> createValidator,
+            IValidator<UpdateStudentDTO> updateValidator
+            )
         {
             _studentService = studentService;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
         }
 
         [HttpGet]
@@ -42,7 +52,16 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateStudentDTO request)
         {
+            var validationResult = await _createValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                var errorResponse = ApiResponseDto<StudentDTO>.ErrorResult("Validation failed", errors);
+                return BadRequest(errorResponse);
+            }
+
             var student = await _studentService.CreateStudent(request);
+
 
             return student.Success
                 ? StatusCode(201, student)
@@ -54,6 +73,14 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
             int id,
             [FromBody] UpdateStudentDTO request)
         {
+            var validationResult = await _updateValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                var errorResponse = ApiResponseDto<StudentDTO>.ErrorResult("Validation failed", errors);
+                return BadRequest(errorResponse);
+            }
+
             var student = await _studentService.UpdateStudent(id, request);
 
             return student.Success
