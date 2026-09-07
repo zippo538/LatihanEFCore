@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data;
 
@@ -11,9 +12,11 @@ using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data;
 namespace LatihanEFCore.DTO.Responses.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260907034609_FixEntityRelationships")]
+    partial class FixEntityRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -231,7 +234,7 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                     b.ToTable("Organizations", (string)null);
                 });
 
-            modelBuilder.Entity("LatihanEFCore.DTOs.PublicationTeacherDto", b =>
+            modelBuilder.Entity("LatihanEFCore.DTOs.PublicationTeacher", b =>
                 {
                     b.Property<int>("IdPublicationTeacher")
                         .ValueGeneratedOnAdd()
@@ -343,11 +346,8 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
-                    b.Property<string>("idCourse")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("idCourse");
+                    b.Property<int>("idCourse")
+                        .HasColumnType("int");
 
                     b.HasKey("IdTeacher");
 
@@ -581,7 +581,7 @@ namespace LatihanEFCore.DTO.Responses.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("LatihanEFCore.DTOs.PublicationTeacherDto", b =>
+            modelBuilder.Entity("LatihanEFCore.DTOs.PublicationTeacher", b =>
                 {
                     b.HasOne("LatihanEFCore.DTOs.Teacher", "IdTeacher")
                         .WithMany("PublicationTeachers")

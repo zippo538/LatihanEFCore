@@ -1,5 +1,5 @@
 using Bogus;
-using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models;
+using LatihanEFCore.DTOs;
 
 namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
 {
@@ -9,11 +9,12 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
         {
             var teacherId = 1;
             var publicationId = 1;
+            var courseCodeIndex = 101;
 
             var departments = new[] { "Teknik Informatika", "Sistem Informasi", "Teknik Elektro", "Data Science" };
 
             // 1. Buat generator khusus untuk PublicationTeacher
-            var publicationFaker = new Faker<PublicationTeacher>("id_ID")
+            var publicationFaker = new Faker<PublicationTeacherDto>("id_ID")
                 .RuleFor(p => p.IdPublicationTeacher, f => publicationId++)
                 .RuleFor(p => p.Title, f => f.Lorem.Sentence(4, 3)) // Judul publikasi acak
                 .RuleFor(p => p.Description, f => f.Lorem.Paragraph())
@@ -24,10 +25,11 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
                 .RuleFor(t => t.IdTeacher, f => teacherId++)
                 .RuleFor(t => t.Name, f => f.Name.FullName())
                 .RuleFor(t => t.Email, (f, t) => f.Internet.Email(t.Name))
-                .RuleFor(t => t.HireDate, f => f.Date.Past(10))
+                .RuleFor(t => t.HireDate, f => f.Date.Past(10).Date)
                 .RuleFor(t => t.Department, f => f.PickRandom(departments))
                 .RuleFor(t => t.Address, f => f.Address.FullAddress())
                 .RuleFor(t => t.PhoneNumber, f => f.Phone.PhoneNumber("08##########"))
+                .RuleFor(c => c.idCourse, f => $"CS{courseCodeIndex++}")
                 // Generate 1 sampai 3 item PublicationTeacher untuk tiap Teacher
                 .RuleFor(t => t.PublicationTeachers, f => publicationFaker.Generate(f.Random.Number(1, 3)));
 

@@ -1,5 +1,4 @@
 ﻿using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data;
-using LatihanEFCore.DTO.Responses.Services;
 using LatihanEFCore.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +13,7 @@ using LatihanEFCore.Data.Seeders;
 using LatihanEFCore.Services;
 using System.Security.Claims;
 using LatihanEFCore.Repository;
+using LatihanEFCore.Validator.TeacherValidator;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -95,14 +95,21 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddScoped<IDbinitializer, Dbinitializer>();
 
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
+
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // add FluentValidation
-builder.Services.AddScoped<IValidator<CreateStudentDTO>, CreateStudentValidator>();
+builder.Services.AddScoped<IValidator<RegisterDto>, RegisterValidator>();
+builder.Services.AddScoped<IValidator<LoginDto>, LoginValidator>();
+builder.Services.AddScoped<IValidator<CreateStudentDto>, CreateStudentValidator>();
 builder.Services.AddScoped<IValidator<UpdateStudentDTO>, UpdateStudentValidator>();
-builder.Services.AddScoped<IValidator<RegisterDTO>, RegisterValidator>();
-builder.Services.AddScoped<IValidator<LoginDTO>, LoginValidator>();
+builder.Services.AddScoped<IValidator<CreateTeacherDto>, CreateTeacherValidator>();
+builder.Services.AddScoped<IValidator<UpdateTeacherDto>, UpdateTeacherValidator>();
+
 
 
 // Mengaktifkan API berbasis Controller.

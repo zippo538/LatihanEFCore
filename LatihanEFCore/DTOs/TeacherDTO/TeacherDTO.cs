@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LatihanEFCore.DTO.Responses.DTOs
+namespace LatihanEFCore.DTOs
 {
     public class TeacherDTO
     {
+        public int IdTeacher { get; set; }
         public string Name { get; set; } = string.Empty;
 
         public string Email { get; set; } = string.Empty;
@@ -18,5 +19,8 @@ namespace LatihanEFCore.DTO.Responses.DTOs
         public string? PhoneNumber { get; set; }
 
         public string Department { get; set; } = string.Empty;
+        
+        public string IdCourse { get; set; } = string.Empty;
+        
     }
 }

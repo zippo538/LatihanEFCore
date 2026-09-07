@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LatihanEFCore.DTO.Responses.DTOs
+namespace LatihanEFCore.DTOs
 {
     public class TuitionDTO
     {
@@ -11,6 +11,6 @@ namespace LatihanEFCore.DTO.Responses.DTOs
         public decimal Amount { get; set; }
         public DateTime Date { get; set; }
 
-        public CourseDTO Course { get; set; } = null!;
+        public CourseDto Course { get; set; } = null!;
     }
 }

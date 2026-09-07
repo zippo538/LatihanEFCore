@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace LatihanEFCore.DTO.Responses.DTOs
+namespace LatihanEFCore.DTOs
 {
-    public class ClassroomDTO
+    public class ClassroomDto
     {
         public string Name { get; set; } = string.Empty;
 

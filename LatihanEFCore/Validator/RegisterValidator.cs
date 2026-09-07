@@ -7,7 +7,7 @@ using LatihanEFCore.DTOs;
 
 namespace LatihanEFCore.Validator
 {
-    public class RegisterValidator : AbstractValidator<RegisterDTO>
+    public class RegisterValidator : AbstractValidator<RegisterDto>
     {
         public RegisterValidator()
         {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models;
+using LatihanEFCore.DTOs;
 
 namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
 {

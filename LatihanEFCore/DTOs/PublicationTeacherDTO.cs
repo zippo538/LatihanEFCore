@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models
+namespace LatihanEFCore.DTOs
 {
-    public class PublicationTeacher
+    public class PublicationTeacherDto
     {
         public required int IdPublicationTeacher { get; set; }
         public required Teacher IdTeacher { get; set; }
         public required string Title { get; set; }
         public required string Description { get; set; }
-        public  DateTime? Date { get; set; }
+        public DateTime? Date { get; set; }
     }
 }

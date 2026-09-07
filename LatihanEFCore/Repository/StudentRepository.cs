@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data;
-using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models;
+using LatihanEFCore.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace LatihanEFCore.Repository
@@ -20,11 +16,13 @@ namespace LatihanEFCore.Repository
         {
             return await Context.Students
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(student => student.Organization)
                 .Include(student => student.ActivityPoints)
                 .Include(student => student.Tuitions)
+                .ThenInclude(tuition => tuition.Course)
                 .Include(student => student.Courses)
-                .OrderBy(student => student.Name)
+                .OrderBy(student => student.IdStudent)
                 .ToListAsync(cancellationToken);
         }
 
@@ -34,9 +32,11 @@ namespace LatihanEFCore.Repository
             CancellationToken cancellationToken = default)
         {
             IQueryable<Student> query = Context.Students
+                .AsSplitQuery()
                 .Include(student => student.Organization)
                 .Include(student => student.ActivityPoints)
                 .Include(student => student.Tuitions)
+                .ThenInclude(tuition => tuition.Course)
                 .Include(student => student.Courses);
 
             if (asNoTracking)

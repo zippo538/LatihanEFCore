@@ -1,4 +1,3 @@
-using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using LatihanEFCore.DTOs;
@@ -19,7 +18,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
         public DbSet<Tuition> Tuitions { get; set; } = null!;
         public DbSet<Organization> Organizations { get; set; } = null!;
         public DbSet<ActivityPoints> ActivityPoints { get; set; } = null!;
-        public DbSet<PublicationTeacher> PublicationTeachers { get; set; } = null!;
+        public DbSet<PublicationTeacherDto> PublicationTeachers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,12 +85,15 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
     {
         entity.ToTable("Teachers");
         entity.HasKey(e => e.IdTeacher);
-
         entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
         entity.Property(e => e.Email).IsRequired().HasMaxLength(150);
         entity.Property(e => e.Address).IsRequired().HasMaxLength(250);
         entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
         entity.Property(e => e.Department).IsRequired().HasMaxLength(100);
+        entity.Property(e => e.idCourse)
+            .HasColumnName("idCourse")
+            .HasMaxLength(20)
+            .IsRequired();
 
         // Menghubungkan secara eksplisit 2 arah:
         entity.HasMany(e => e.PublicationTeachers)
@@ -107,7 +109,6 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             {
                 entity.ToTable("Courses");
                 entity.HasKey(e => e.IdCourse);
-
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(150);
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.Credits).IsRequired();
@@ -119,14 +120,16 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
 
                 // Relasi Course dengan Teacher
                 entity.HasOne(e => e.Teacher)
-                    .WithMany()
+                    .WithMany(e => e.Courses)
                     .HasForeignKey(e => e.IdTeacher)
+                    .HasPrincipalKey(e => e.IdTeacher)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 // Relasi Course dengan Classroom
                 entity.HasOne(e => e.Classroom)
                     .WithMany()
                     .HasForeignKey(e => e.ClassroomId)
+                    .HasPrincipalKey(e => e.IdClassroom)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }
@@ -137,7 +140,6 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             {
                 entity.ToTable("Classrooms");
                 entity.HasKey(e => e.IdClassroom);
-
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Location).IsRequired().HasMaxLength(200);
             });
@@ -229,7 +231,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
 
         private static void ConfigurePublicationTeacher(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<PublicationTeacher>(entity =>
+            modelBuilder.Entity<PublicationTeacherDto>(entity =>
             {
                 entity.ToTable("PublicationTeachers");
                 entity.HasKey(e => e.IdPublicationTeacher);

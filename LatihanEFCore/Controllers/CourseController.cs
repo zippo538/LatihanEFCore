@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data;
-using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models;
+using LatihanEFCore.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
 {
     [ApiController]
     [Route("api/courses")]
+    [Authorize]
 public sealed class CourseController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
@@ -79,6 +81,7 @@ public sealed class CourseController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(
         [FromBody] CourseCreateRequest request,
         CancellationToken cancellationToken)
@@ -132,6 +135,7 @@ public sealed class CourseController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(
         string id,
         [FromBody] CourseUpdateRequest request,

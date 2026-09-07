@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models
+namespace LatihanEFCore.DTOs
 {
     public class Student
     {
@@ -33,9 +33,9 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models
             = new List<ActivityPoints>();
 
         // Relasi one-to-many
-        public ICollection<Tuition> Tuitions { get; set; }
-            = new List<Tuition>();
-        public ICollection<Course> Courses { get; set; }
-            = new List<Course>();
+        public ICollection<Tuition> Tuitions { get; set; } = new List<Tuition>();
+        public ICollection<Course> Courses { get; set; } = new List<Course>();
+        [NotMapped]
+        public int TotalActivityPoint => ActivityPoints?.Sum(a => a.Points) ?? 0;
     }
 }

@@ -1,178 +1,97 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data;
-using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models;
+using LatihanEFCore.DTOs;
+using LatihanEFCore.Services.Interfaces;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using LatihanEFCore.Commons;
 
 
 namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
 {
     [ApiController]
     [Route("api/teachers")]
-    public sealed class TeacherController : ControllerBase
+    [Authorize]
+    public class TeacherController : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
-        public TeacherController(ApplicationDbContext db) => _db = db;
+        private readonly ITeacherService _teacherService;
+        private readonly IValidator<CreateTeacherDto> _createValidator;
+        private readonly IValidator<UpdateTeacherDto> _updateValidator;
+
+        public TeacherController(
+            ITeacherService teacherService,
+            IValidator<CreateTeacherDto> createValidator,
+            IValidator<UpdateTeacherDto> updateValidator)
+        {
+            _teacherService = teacherService;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
-            var teachers = await _db.Teachers
-                .AsNoTracking()
-                .OrderBy(teacher => teacher.Name)
-                .Select(teacher => new
-                {
-                    teacher.IdTeacher,
-                    teacher.Name,
-                    teacher.Email,
-                    teacher.HireDate,
-                    teacher.Address,
-                    teacher.PhoneNumber,
-                    teacher.Department
-                })
-                .ToListAsync(cancellationToken);
-
-            return Ok(teachers);
+            cancellationToken.ThrowIfCancellationRequested();
+            var result = await _teacherService.GetAllTeacher();
+            return Ok(result);
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
-            var teacher = await _db.Teachers
-                .AsNoTracking()
-                .Where(teacher => teacher.IdTeacher == id)
-                .Select(teacher => new
-                {
-                    teacher.IdTeacher,
-                    teacher.Name,
-                    teacher.Email,
-                    teacher.HireDate,
-                    teacher.Address,
-                    teacher.PhoneNumber,
-                    teacher.Department
-                })
-                .FirstOrDefaultAsync(cancellationToken);
-
-            return teacher is null
-                ? NotFound(new { message = $"Teacher dengan ID {id} tidak ditemukan." })
-                : Ok(teacher);
+            cancellationToken.ThrowIfCancellationRequested();
+            var result = await _teacherService.GetTeacher(id);
+            return Ok(result);
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(
-            [FromBody] TeacherRequest request,
+            [FromBody] CreateTeacherDto request,
             CancellationToken cancellationToken)
         {
-            if (request.HireDate == default)
+            var validationResult = await _createValidator.ValidateAsync(request, cancellationToken);
+
+            if (!validationResult.IsValid)
             {
-                ModelState.AddModelError(nameof(request.HireDate), "Tanggal bergabung wajib diisi.");
-                return ValidationProblem(ModelState);
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                var errorResponse = ServiceResult<TeacherDTO>.ErrorResult("Validation failed", errors);
+                return BadRequest(errorResponse);
             }
 
-            var email = request.Email.Trim();
-            if (await _db.Teachers.AnyAsync(t => t.Email == email, cancellationToken))
-                return Conflict(new { message = $"Email {email} sudah digunakan." });
-
-            var teacher = new Teacher
-            {
-                IdTeacher = 0,
-                Name = request.Name.Trim(),
-                Email = email,
-                HireDate = request.HireDate,
-                Address = request.Address.Trim(),
-                PhoneNumber = request.PhoneNumber,
-                Department = request.Department.Trim()
-            };
-
-            _db.Teachers.Add(teacher);
-            await _db.SaveChangesAsync(cancellationToken);
-
-            return CreatedAtAction(nameof(GetById), new { id = teacher.IdTeacher }, teacher);
+            var result = await _teacherService.CreateTeacher(request);
+            return Ok(result);
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(
             int id,
-            [FromBody] TeacherRequest request,
+            [FromBody] UpdateTeacherDto request,
             CancellationToken cancellationToken)
         {
-            var teacher = await _db.Teachers
-                .FirstOrDefaultAsync(teacher => teacher.IdTeacher == id, cancellationToken);
+            var validationResult = await _updateValidator.ValidateAsync(request, cancellationToken);
 
-            if (teacher is null)
-                return NotFound(new { message = $"Teacher dengan ID {id} tidak ditemukan." });
-
-            var email = request.Email.Trim();
-            if (await _db.Teachers.AnyAsync(
-                    other => other.IdTeacher != id && other.Email == email,
-                    cancellationToken))
+            if (!validationResult.IsValid)
             {
-                return Conflict(new { message = $"Email {email} sudah digunakan teacher lain." });
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                var errorResponse = ServiceResult<TeacherDTO>.ErrorResult("Validation failed", errors);
+                return BadRequest(errorResponse);
             }
 
-            teacher.Name = request.Name.Trim();
-            teacher.Email = email;
-            teacher.HireDate = request.HireDate;
-            teacher.Address = request.Address.Trim();
-            teacher.PhoneNumber = request.PhoneNumber;
-            teacher.Department = request.Department.Trim();
-
-            await _db.SaveChangesAsync(cancellationToken);
-            return Ok(new { message = "Data teacher berhasil diubah.", data = teacher });
+            var result = await _teacherService.UpdateTeacher(id, request);
+            return Ok(result);
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var teacher = await _db.Teachers
-                .FirstOrDefaultAsync(teacher => teacher.IdTeacher == id, cancellationToken);
-
-            if (teacher is null)
-                return NotFound(new { message = $"Teacher dengan ID {id} tidak ditemukan." });
-
-            var usedByCourse = await _db.Courses.AnyAsync(
-                course => EF.Property<int>(course, "TeacherId") == id,
-                cancellationToken);
-
-            var usedByOrganization = await _db.Organizations.AnyAsync(
-                organization => EF.Property<int>(organization, "TeacherId") == id,
-                cancellationToken);
-
-            if (usedByCourse || usedByOrganization)
-            {
-                return Conflict(new
-                {
-                    message = "Teacher masih digunakan oleh course atau organization. Hapus relasinya terlebih dahulu."
-                });
-            }
-
-            _db.Teachers.Remove(teacher);
-            await _db.SaveChangesAsync(cancellationToken);
-            return Ok(new { message = $"Teacher dengan ID {id} berhasil dihapus." });
+            cancellationToken.ThrowIfCancellationRequested();
+            var result = await _teacherService.DeleteTeacher(id);
+            return Ok(result);
         }
-
     }
 }
-    public sealed class TeacherRequest
-    {
-        [Required, MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-
-        [Required, EmailAddress, MaxLength(150)]
-        public string Email { get; set; } = string.Empty;
-
-        public DateTime HireDate { get; set; }
-
-        [Required, MaxLength(250)]
-        public string Address { get; set; } = string.Empty;
-
-        [Required]
-        public string PhoneNumber { get; set; }
-
-        [Required, MaxLength(100)]
-        public string Department { get; set; } = string.Empty;
-    }

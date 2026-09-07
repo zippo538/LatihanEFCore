@@ -21,7 +21,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             // Cek apakah data sudah ada, jika belum maka lakukan seeding
             if (!_context.Teachers.Any())
             {
-                var teachers = Seeders.TeacherSeeder.GetTeachers(5);
+                var teachers = Seeders.TeacherSeeder.GetTeachers(10);
                 await _context.Teachers.AddRangeAsync(teachers);
                 await _context.SaveChangesAsync();
             }
@@ -34,14 +34,20 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data
             }
             if (!_context.Courses.Any())
             {
-                var courses = Seeders.CourseSeeder.GetCourses(teachers : _context.Teachers.ToList(), classrooms : _context.Classrooms.ToList(), count: 10);
+                var courses = Seeders.CourseSeeder.GetCourses(
+                    teachers: _context.Teachers.ToList(),
+                    classrooms: _context.Classrooms.ToList(),
+                    count: 10);
                 await _context.Courses.AddRangeAsync(courses);
                 await _context.SaveChangesAsync();
             }
             if (!_context.Students.Any())
             {
                 // Lakukan seeding data di sini
-                var students = Seeders.StudentSeeder.GetStudents(defaultTeacher: _context.Teachers.FirstOrDefault()!, defaultCourse: _context.Courses.FirstOrDefault()!, count: 10);
+                var students = Seeders.StudentSeeder.GetStudents(
+                    teachers: _context.Teachers.ToList(),
+                    courses: _context.Courses.ToList(),
+                    count: 10);
                 await _context.Students.AddRangeAsync(students);
                 await _context.SaveChangesAsync();
             }

@@ -1,7 +1,7 @@
 
-namespace LatihanEFCore.DTO.Responses.DTOs
+namespace LatihanEFCore.DTOs
 {
-    public class ActivityPointDTO
+    public class ActivityPointDto
     {
         public int IdActivityPoints { get; set; }
         public string Title { get; set; } = string.Empty;

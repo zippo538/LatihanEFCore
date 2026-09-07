@@ -2,7 +2,7 @@ using FluentValidation;
 using LatihanEFCore.DTOs;
 namespace LatihanEFCore.Validator
 {
-    public class LoginValidator : AbstractValidator<LoginDTO>
+    public class LoginValidator : AbstractValidator<LoginDto>
     {
         public LoginValidator()
         {

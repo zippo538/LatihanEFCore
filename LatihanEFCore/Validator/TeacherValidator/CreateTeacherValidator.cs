@@ -1,12 +1,15 @@
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using FluentValidation;
 using LatihanEFCore.DTOs;
 
-namespace LatihanEFCore.Validator
+namespace LatihanEFCore.Validator.TeacherValidator
 {
-    public class CreateStudentValidator : AbstractValidator<CreateStudentDto>
+    public class CreateTeacherValidator : AbstractValidator<CreateTeacherDto>
     {
-        public CreateStudentValidator()
+        public CreateTeacherValidator()
         {
             RuleFor(x => x.Name)
             .Cascade(CascadeMode.Stop)
@@ -42,9 +45,8 @@ namespace LatihanEFCore.Validator
                 .WithMessage("Address is required");
 
 
-            RuleFor(x => x.IdOrganization)
-                .GreaterThan(0)
-                .WithMessage("IdOrganization must be greater than zero");
+            RuleFor(x => x.IdCourse)
+                .NotEmpty().WithMessage("IdCourse must filled");
         }
     }
 }

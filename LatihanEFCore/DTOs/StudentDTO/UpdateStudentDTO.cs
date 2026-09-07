@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace LatihanEFCore.DTOs
 {
-    public class CreateStudentDTO
+    public class UpdateStudentDTO
     {
         public string Name { get; set; } = string.Empty;
 
@@ -15,7 +10,7 @@ namespace LatihanEFCore.DTOs
 
         public string? Address { get; set; }
 
+        public decimal GPA { get; set; }
         public int IdOrganization { get; set; }
-
     }
 }

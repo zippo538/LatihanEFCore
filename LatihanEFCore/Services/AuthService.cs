@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
-using LatihanEFCore.DTO.Responses;
-using LatihanEFCore.DTOs;
+using LatihanEFCore.Commons;
 using LatihanEFCore.DTOs;
 using LatihanEFCore.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -34,25 +29,25 @@ namespace LatihanEFCore.Services
             _mapper = mapper;
         }
 
-        public async Task<ApiResponseDto<UserDTO>> GetCurrentUserAsync(string userId)
+        public async Task<ServiceResult<UserDto>> GetCurrentUserAsync(string userId)
         {
             try
             {
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    return new ApiResponseDto<UserDTO>
+                    return new ServiceResult<UserDto>
                     {
                         Success = false,
                         Message = "User not found"
                     };
                 }
 
-                var userDto = _mapper.Map<UserDTO>(user);
+                var userDto = _mapper.Map<UserDto>(user);
                 var roles = await _userManager.GetRolesAsync(user);
                 userDto.Roles = roles.ToList();
 
-                return new ApiResponseDto<UserDTO>
+                return new ServiceResult<UserDto>
                 {
                     Success = true,
                     Data = userDto
@@ -60,7 +55,7 @@ namespace LatihanEFCore.Services
             }
             catch (Exception ex)
             {
-                return new ApiResponseDto<UserDTO>
+                return new ServiceResult<UserDto>
                 {
                     Success = false,
                     Message = $"Error retrieving user: {ex.Message}"
@@ -69,39 +64,39 @@ namespace LatihanEFCore.Services
         }
 
 
-        public async Task<ApiResponseDto<AuthResponseDTO>> LoginAsync(LoginDTO loginDTO)
+        public async Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto loginDTO)
         {
             try
             {
                 var user = await _userManager.FindByEmailAsync(loginDTO.Email);
                 if (user == null)
                 {
-                    return ApiResponseDto<AuthResponseDTO>.ErrorResult("Invalid email or password");
+                    return ServiceResult<AuthResponseDto>.ErrorResult("Invalid email or password");
                 }
 
                 var result = await _signInManager.CheckPasswordSignInAsync(user, loginDTO.Password, false);
                 if (!result.Succeeded)
                 {
-                    return ApiResponseDto<AuthResponseDTO>.ErrorResult("Invalid email or password");
+                    return ServiceResult<AuthResponseDto>.ErrorResult("Invalid email or password");
                 }
 
                 var authResponse = await GenerateJwtToken(user);
-                return ApiResponseDto<AuthResponseDTO>.SuccessResult(authResponse, "Login successful");
+                return ServiceResult<AuthResponseDto>.SuccessResult(authResponse, "Login successful");
             }
             catch (Exception ex)
             {
-                return ApiResponseDto<AuthResponseDTO>.ErrorResult($"Login error: {ex.Message}");
+                return ServiceResult<AuthResponseDto>.ErrorResult($"Login error: {ex.Message}");
             }
         }
 
-        public async Task<ApiResponseDto<AuthResponseDTO>> RegisterAsync(RegisterDTO registerDTO)
+        public async Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterDto registerDTO)
         {
             try
             {
                 var existingUser = await _userManager.FindByEmailAsync(registerDTO.Email);
                 if (existingUser != null)
                 {
-                    return ApiResponseDto<AuthResponseDTO>.ErrorResult("User with this email already exists");
+                    return ServiceResult<AuthResponseDto>.ErrorResult("User with this email already exists");
                 }
 
                 var user = _mapper.Map<ApplicationUser>(registerDTO);
@@ -110,7 +105,7 @@ namespace LatihanEFCore.Services
                 if (!result.Succeeded)
                 {
                     var errors = result.Errors.Select(e => e.Description).ToList();
-                    return ApiResponseDto<AuthResponseDTO>.ErrorResult("Registration failed", errors);
+                    return ServiceResult<AuthResponseDto>.ErrorResult("Registration failed", errors);
                 }
 
                 // Add user to default role
@@ -121,19 +116,19 @@ namespace LatihanEFCore.Services
                         .Select(e => e.Description)
                         .ToList();
 
-                    return ApiResponseDto<AuthResponseDTO>
+                    return ServiceResult<AuthResponseDto>
                         .ErrorResult("Failed to assign default role", errors);
                 }
 
                 var authResponse = await GenerateJwtToken(user);
-                return ApiResponseDto<AuthResponseDTO>.SuccessResult(authResponse, "Registration successful");
+                return ServiceResult<AuthResponseDto>.SuccessResult(authResponse, "Registration successful");
             }
             catch (Exception ex)
             {
-                return ApiResponseDto<AuthResponseDTO>.ErrorResult($"Registration error: {ex.Message}");
+                return ServiceResult<AuthResponseDto>.ErrorResult($"Registration error: {ex.Message}");
             }
         }
-        private async Task<AuthResponseDTO> GenerateJwtToken(
+        private async Task<AuthResponseDto> GenerateJwtToken(
     ApplicationUser user)
         {
             var jwtSection = _configuration.GetSection("Jwt");
@@ -201,10 +196,10 @@ namespace LatihanEFCore.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            var userDto = _mapper.Map<UserDTO>(user);
+            var userDto = _mapper.Map<UserDto>(user);
             userDto.Roles = roles.ToList();
 
-            return new AuthResponseDTO
+            return new AuthResponseDto
             {
                 Token = tokenHandler.WriteToken(token),
                 Expiration = expiration,

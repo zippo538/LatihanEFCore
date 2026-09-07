@@ -1,10 +1,8 @@
 using FluentValidation;
-using LatihanEFCore.DTO.Responses;
 using LatihanEFCore.DTOs;
 using LatihanEFCore.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+using LatihanEFCore.Commons;
 
 namespace LatihanEFCore.Controllers
 {
@@ -13,12 +11,12 @@ namespace LatihanEFCore.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IValidator<RegisterDTO> _registerValidator;
-        private readonly IValidator<LoginDTO> _loginValidator;
+        private readonly IValidator<RegisterDto> _registerValidator;
+        private readonly IValidator<LoginDto> _loginValidator;
 
         public AuthController(IAuthService authService,
-            IValidator<RegisterDTO> registerValidator,
-            IValidator<LoginDTO> loginValidator)
+            IValidator<RegisterDto> registerValidator,
+            IValidator<LoginDto> loginValidator)
         {
             _authService = authService;
             _registerValidator = registerValidator;
@@ -49,13 +47,13 @@ namespace LatihanEFCore.Controllers
         //     return Ok(result);
         // }
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var validationResult = await _loginValidator.ValidateAsync(loginDto);
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                var errorResponse = ApiResponseDto<AuthResponseDTO>.ErrorResult("Validation failed", errors);
+                var errorResponse = ServiceResult<AuthResponseDto>.ErrorResult("Validation failed", errors);
                 return BadRequest(errorResponse);
             }
 

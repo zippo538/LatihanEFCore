@@ -1,9 +1,9 @@
-using LatihanEFCore.DTO.Responses.DTOs;
 using LatihanEFCore.DTOs;
 using LatihanEFCore.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
+using LatihanEFCore.Commons;
 using LatihanEFCore.DTO.Responses;
 
 namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
@@ -15,12 +15,12 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
     public class StudentController : ControllerBase
     {
         private readonly IStudentService _studentService;
-        private readonly IValidator<CreateStudentDTO> _createValidator;
+        private readonly IValidator<CreateStudentDto> _createValidator;
         private readonly IValidator<UpdateStudentDTO> _updateValidator;
 
         public StudentController(
             IStudentService studentService,
-            IValidator<CreateStudentDTO> createValidator,
+            IValidator<CreateStudentDto> createValidator,
             IValidator<UpdateStudentDTO> updateValidator
             )
         {
@@ -50,13 +50,14 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateStudentDTO request)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create([FromBody] CreateStudentDto request)
         {
             var validationResult = await _createValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                var errorResponse = ApiResponseDto<StudentDTO>.ErrorResult("Validation failed", errors);
+                var errorResponse = ServiceResult<StudentDTO>.ErrorResult("Validation failed", errors);
                 return BadRequest(errorResponse);
             }
 
@@ -69,6 +70,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(
             int id,
             [FromBody] UpdateStudentDTO request)
@@ -77,7 +79,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                var errorResponse = ApiResponseDto<StudentDTO>.ErrorResult("Validation failed", errors);
+                var errorResponse = ServiceResult<StudentDTO>.ErrorResult("Validation failed", errors);
                 return BadRequest(errorResponse);
             }
 
@@ -89,6 +91,7 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var response = await _studentService.DeleteStudent(id);

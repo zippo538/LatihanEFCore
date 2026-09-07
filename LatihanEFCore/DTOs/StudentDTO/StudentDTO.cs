@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace LatihanEFCore.DTO.Responses.DTOs
+namespace LatihanEFCore.DTOs
 {
     public class StudentDTO
     {
@@ -18,13 +14,14 @@ namespace LatihanEFCore.DTO.Responses.DTOs
         public decimal GPA { get; set; }
 
         public int  IdOrganization { get; set; } 
+        public int TotalActivityPoint {get;set;}
 
-        public List<ActivityPointDTO> ActivityPoints { get; set; }
+        public List<ActivityPointDto> ActivityPoints { get; set; }
             = new();
 
-        public List<CourseDTO> Tuitions { get; set; }
+        public List<TuitionDTO> Tuitions { get; set; }
             = new();
-        public List<CourseDTO> Courses { get; set; }
+        public List<CourseDto> Courses { get; set; }
             = new();
     }
 }

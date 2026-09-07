@@ -1,27 +1,67 @@
 using Bogus;
-using home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Models;
+using LatihanEFCore.DTOs;
 
 namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
 {
     public static class StudentSeeder
     {
-        public static List<Student> GetStudents(Teacher defaultTeacher, Course defaultCourse, int count = 10)
+        public static List<Student> GetStudents(
+    List<Teacher> teachers,
+    List<Course> courses,
+    int count = 10)
         {
-            var studentId = 1;
-
-            // Satu Teacher hanya dimiliki oleh satu Organization.
-            // Seluruh Student yang dibuat oleh seeder ini berada pada organisasi yang sama.
-            var organization = new Organization
+            if (courses is null || courses.Count == 0)
             {
-                IdOrganization = 1,
-                Name = "Organization A",
-                Address = "Jl. Pendidikan No. 1",
-                PhoneNumber = "081234567890",
-                Email = "organization.a@example.com",
-                Description = "Organisasi utama untuk data awal.",
-                IdTeacher = defaultTeacher.IdTeacher,
-                Teacher = defaultTeacher
+                throw new ArgumentException(
+                    "Daftar course tidak boleh kosong.",
+                    nameof(courses));
+            }
+
+            if (teachers is null || teachers.Count == 0)
+            {
+                throw new ArgumentException(
+                    "Daftar teacher tidak boleh kosong.",
+                    nameof(teachers));
+            }
+
+            var studentId = 1;
+            if (teachers.Count < 10)
+            {
+                throw new ArgumentException(
+                    "Jumlah teacher minimal harus 10 karena setiap organization membutuhkan teacher yang berbeda.",
+                    nameof(teachers));
+            }
+
+            Organization CreateOrganization(int id, Teacher teacher) => new()
+            {
+                IdOrganization = id,
+                Name = $"Organization {id}",
+                Address = $"Jl. Pendidikan No. {id}",
+                PhoneNumber = $"0812345678{id:00}",
+                Email = $"organization{id}@example.com",
+                Description = $"Organisasi nomor {id}.",
+                IdTeacher = teacher.IdTeacher,
+                Teacher = teacher
             };
+
+            // Relasi Teacher-Organization one-to-one:
+            // satu teacher hanya boleh digunakan oleh satu organization.
+            var organizations = new List<Organization>
+            {
+                CreateOrganization(1, teachers[0]),
+                CreateOrganization(2, teachers[1]),
+                CreateOrganization(3, teachers[2]),
+                CreateOrganization(4, teachers[3]),
+                CreateOrganization(5, teachers[4]),
+                CreateOrganization(6, teachers[5]),
+                CreateOrganization(7, teachers[6]),
+                CreateOrganization(8, teachers[7]),
+                CreateOrganization(9, teachers[8]),
+                CreateOrganization(10, teachers[9])
+            };
+
+            // ID tuition dibuat unik untuk setiap student.
+            var tuitionId = 1;
 
             // Pool ActivityPoints dibuat satu kali agar satu point dapat digunakan
             // oleh banyak Student (relasi many-to-many).
@@ -35,18 +75,16 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
 
             var activityPoints = activityPointFaker.Generate(Math.Max(3, count / 2));
 
-            var tuitionId = 1;
-
             var faker = new Faker<Student>("id_ID") // Menggunakan lokal Indonesia
                 .RuleFor(s => s.IdStudent, f => studentId++)
                 .RuleFor(s => s.Name, f => f.Name.FullName()) // Generasi Nama Acak
                 .RuleFor(s => s.Email, (f, s) => f.Internet.Email(s.Name)) // Email acak berdasarkan nama
-                .RuleFor(s => s.EnrollmentDate, f => f.Date.Past(3)) // Tanggal acak 3 tahun lalu
+                .RuleFor(s => s.EnrollmentDate, f => f.Date.Past(3).Date) // Tanggal acak 3 tahun lalu
                 .RuleFor(s => s.GPA, f => Math.Round(f.Random.Decimal(2.5m, 4.0m), 2))
                 .RuleFor(s => s.Address, f => f.Address.FullAddress())
                 .RuleFor(s => s.PhoneNumber, f => f.Phone.PhoneNumber("08##########"))
-                .RuleFor(s => s.IdOrganization, _ => organization.IdOrganization)
-                .RuleFor(s => s.Organization, _ => organization)
+                .RuleFor(s => s.Organization, f => f.PickRandom(organizations))
+                .RuleFor(s => s.IdOrganization, (_, student) => student.Organization.IdOrganization)
                 .RuleFor(s => s.ActivityPoints, f => activityPoints
                     .Where((_, index) => index == 0 || f.Random.Bool())
                     .ToList())
@@ -57,8 +95,8 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
                         IdTuition = tuitionId++,
                         IdStudent = student.IdStudent,
                         Student = student,
-                        IdCourse = defaultCourse.IdCourse,
-                        Course = defaultCourse,
+                        Course = f.PickRandom(courses),
+                        IdCourse = string.Empty,
                         Date = f.Date.Recent(60),
                         Amount = 5_000_000m
                     }
@@ -66,8 +104,33 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
 
             var students = faker.Generate(count); // Membuat `count` jumlah data secara otomatis
 
-            // Lengkapi navigation property pada kedua sisi relasi.
-            organization.Students = students;
+            // Lengkapi navigation property pada sisi Organization.
+            foreach (var organization in organizations)
+            {
+                organization.Students = students
+                    .Where(student => student.Organization == organization)
+                    .ToList();
+            }
+
+            // Lengkapi ID course berdasarkan course yang dipilih secara acak.
+            foreach (var student in students)
+            {
+                foreach (var tuition in student.Tuitions)
+                {
+                    tuition.IdCourse = tuition.Course.IdCourse;
+
+                    // Lengkapi relasi many-to-many Student-Course.
+                    if (!student.Courses.Contains(tuition.Course))
+                    {
+                        student.Courses.Add(tuition.Course);
+                    }
+
+                    if (!tuition.Course.Students.Contains(student))
+                    {
+                        tuition.Course.Students.Add(student);
+                    }
+                }
+            }
 
             foreach (var student in students)
             {
@@ -79,6 +142,6 @@ namespace home.mahindra.RiderProjects.LatihanEFCore.LatihanEFCore.Data.Seeders
 
             return students;
         }
-}
+    }
 }
 
